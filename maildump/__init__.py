@@ -1,3 +1,4 @@
+from __future__ import print_function
 import asyncore
 
 import gevent
@@ -34,7 +35,7 @@ def start(http_host, http_port, smtp_host, smtp_port, db_path=None):
     try:
         stopper.wait()
     except KeyboardInterrupt:
-        print
+        print()
     else:
         log.debug('Received stop signal')
     # Clean up
