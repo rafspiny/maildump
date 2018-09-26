@@ -11,7 +11,7 @@ import sys
 
 import logbook
 from daemon.pidfile import TimeoutPIDLockFile
-from geventdaemon import GeventDaemonContext
+from .geventdaemon import GeventDaemonContext
 from logbook import NullHandler
 from logbook.more import ColorizedStderrHandler
 from passlib.apache import HtpasswdFile
@@ -94,8 +94,13 @@ def main():
         print('Htpasswd file does not exist')
         sys.exit(1)
 
+    # Conditionally check for name or filename property (PY3.x or filename PY2.X)
+    PY2 = sys.version_info[0] == 2
+    if PY2:
+        asset_folder = os.path.join(pkgutil.get_loader('maildump').filename, 'static')
+    else:
+        asset_folder = os.path.join(pkgutil.get_loader('maildump').name, 'static')
     # Check if the static folder is writable
-    asset_folder = os.path.join(pkgutil.get_loader('maildump').filename, 'static')
     if args.autobuild_assets and not os.access(asset_folder, os.W_OK):
         print('Autobuilding assets requires write access to {0}'.format(asset_folder))
         sys.exit(1)

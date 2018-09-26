@@ -7,7 +7,15 @@ from functools import wraps
 
 from pytz import utc
 from flask import current_app
-from webassets.filter.cssprefixer import CSSPrefixer as _CSSPrefixer
+import sys
+from builtins import str
+
+if sys.version_info[0] > 2:
+    from webassets.filter.autoprefixer import Autoprefixer6Filter as AssetPrefix
+    from builtins import str as builtin_str
+else:
+    from webassets.filter.cssprefixer import CSSPrefixer as AssetPrefix
+    from __builtin__ import str as builtin_str
 
 
 def _json_default(obj):
@@ -29,7 +37,7 @@ def bool_arg(arg):
 
 
 def decode_header(value):
-    return ''.join(unicode(decoded, charset or 'utf-8') for decoded, charset in _decode_header(value)).encode('utf-8')
+    return ''.join(decoded for decoded, charset in _decode_header(value))
 
 
 def split_addresses(value):
@@ -55,7 +63,7 @@ def rest(f):
             response = ret
         elif isinstance(ret, tuple):
             # code, result_dict|msg_string
-            if isinstance(ret[1], basestring):
+            if isinstance(ret[1], str) or isinstance(ret[1], builtin_str):
                 response = jsonify(msg=ret[1])
             else:
                 response = jsonify(**ret[1])
@@ -74,5 +82,5 @@ def get_version():
         return 'dev'
 
 
-class CSSPrefixer(_CSSPrefixer):
+class CSSAssetPrefix(AssetPrefix):
     max_debug_level = None

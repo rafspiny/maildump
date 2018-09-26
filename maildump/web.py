@@ -1,6 +1,6 @@
 import os
 import re
-from cStringIO import StringIO
+from six import StringIO, BytesIO
 
 import bs4
 from flask import Flask, render_template, request, url_for, send_file, abort
@@ -9,7 +9,7 @@ from logbook import Logger
 
 import maildump
 from maildump import db
-from maildump.util import rest, bool_arg, CSSPrefixer, get_version
+from maildump.util import rest, bool_arg, CSSAssetPrefix, get_version
 from maildump.web_realtime import handle_socketio_request
 
 
@@ -26,14 +26,18 @@ assets.auto_build = False
 assets.config['PYSCSS_STATIC_ROOT'] = os.path.join(os.path.dirname(__file__), 'static')
 assets.config['PYSCSS_STATIC_URL'] = '/static'
 assets.config['PYSCSS_DEBUG_INFO'] = False
+assets.config['AUTOPREFIXER_BIN'] = os.path.join(app.root_path, os.pardir, 'node_modules', '.bin', 'postcss')
 js = Bundle('js/lib/jquery.js', 'js/lib/jquery-ui.js', 'js/lib/jquery.hotkeys.js',
             'js/lib/handlebars.js', 'js/lib/moment.js', 'js/lib/socket.io.js', 'js/lib/jstorage.js',
             'js/util.js', 'js/message.js', 'js/maildump.js',
             filters='rjsmin', output='assets/bundle.%(version)s.js')
 scss = Bundle('css/maildump.scss',
               filters='pyscss', output='assets/maildump.%(version)s.css')
+# TODO Conditionally select CSSPrefixer or AutoPrefix, according to the python version
+# css = Bundle('css/reset.css', 'css/jquery-ui.css', scss,
+#              filters=('cssrewrite', CSSPrefixer(), 'cssmin'), output='assets/bundle.%(version)s.css')
 css = Bundle('css/reset.css', 'css/jquery-ui.css', scss,
-             filters=('cssrewrite', CSSPrefixer(), 'cssmin'), output='assets/bundle.%(version)s.css')
+             filters=('cssrewrite', CSSAssetPrefix(), 'cssmin'), output='assets/bundle.%(version)s.css')
 assets.register('js_all', js)
 assets.register('css_all', css)
 # Socket.IO
@@ -103,7 +107,7 @@ def _part_response(part, body=None, charset=None):
         body = part['body']
     if charset != 'utf-8':
         body = body.decode(charset).encode('utf-8')
-    io = StringIO(body)
+    io = BytesIO(str.encode(body))
     io.seek(0)
     response = send_file(io, part['type'], part['is_attachment'], part['filename'])
     response.charset = charset
@@ -142,7 +146,7 @@ def _fix_cid_links(soup, message_id):
                                  url_for('get_message_part', message_id=message_id, cid=m.group('cid')))
     # Iterate over all attributes that do not contain CSS and replace cid references
     for tag in (x for x in soup.descendants if isinstance(x, bs4.Tag)):
-        for name, value in tag.attrs.iteritems():
+        for name, value in tag.attrs.items():
             if isinstance(value, list):
                 value = ' '.join(value)
             m = RE_CID.match(value)
@@ -171,7 +175,7 @@ def get_message_source(message_id):
     message = db.get_message(message_id)
     if not message:
         return 404, 'message does not exist'
-    io = StringIO(message['source'])
+    io = BytesIO(str.encode(message['source']))
     io.seek(0)
     return send_file(io, 'text/plain')
 
@@ -182,7 +186,7 @@ def get_message_eml(message_id):
     message = db.get_message(message_id)
     if not message:
         return 404, 'message does not exist'
-    io = StringIO(message['source'])
+    io = BytesIO(str.encode(message['source']))
     io.seek(0)
     return send_file(io, 'message/rfc822')
 

@@ -5,8 +5,10 @@ beautifulsoup4
 cssmin
 cssprefixer
 cssutils
-gevent<1.1
-gevent-socketio
+future
+gevent
+gevent-socketio; python_version <= '2.7'
+-e 'git+https://github.com/abourget/gevent-socketio.git@master#egg=gevent-socketio; python_version >= "3.4"'
 gevent-websocket
 html5lib
 lockfile
@@ -14,3 +16,5 @@ passlib
 pyScss
 python-daemon
 pytz
+six
+webassets
