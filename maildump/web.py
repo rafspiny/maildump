@@ -9,7 +9,7 @@ from logbook import Logger
 
 import maildump
 from maildump import db
-from maildump.util import rest, bool_arg, CSSAssetPrefix, get_version
+from maildump.util import rest, bool_arg, get_version
 from maildump.web_realtime import handle_socketio_request
 
 
@@ -26,18 +26,14 @@ assets.auto_build = False
 assets.config['PYSCSS_STATIC_ROOT'] = os.path.join(os.path.dirname(__file__), 'static')
 assets.config['PYSCSS_STATIC_URL'] = '/static'
 assets.config['PYSCSS_DEBUG_INFO'] = False
-assets.config['AUTOPREFIXER_BIN'] = os.path.join(app.root_path, os.pardir, 'node_modules', '.bin', 'postcss')
 js = Bundle('js/lib/jquery.js', 'js/lib/jquery-ui.js', 'js/lib/jquery.hotkeys.js',
             'js/lib/handlebars.js', 'js/lib/moment.js', 'js/lib/socket.io.js', 'js/lib/jstorage.js',
             'js/util.js', 'js/message.js', 'js/maildump.js',
             filters='rjsmin', output='assets/bundle.%(version)s.js')
 scss = Bundle('css/maildump.scss',
               filters='pyscss', output='assets/maildump.%(version)s.css')
-# TODO Conditionally select CSSPrefixer or AutoPrefix, according to the python version
-# css = Bundle('css/reset.css', 'css/jquery-ui.css', scss,
-#              filters=('cssrewrite', CSSPrefixer(), 'cssmin'), output='assets/bundle.%(version)s.css')
 css = Bundle('css/reset.css', 'css/jquery-ui.css', scss,
-             filters=('cssrewrite', CSSAssetPrefix(), 'cssmin'), output='assets/bundle.%(version)s.css')
+             filters=('cssrewrite', 'cssmin'), output='assets/bundle.%(version)s.css')
 assets.register('js_all', js)
 assets.register('css_all', css)
 # Socket.IO

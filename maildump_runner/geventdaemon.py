@@ -1,6 +1,13 @@
 import daemon
 import signal
 from builtins import str
+import sys
+
+
+if sys.version_info[0] > 2:
+    from builtins import str as builtin_str
+else:
+    from __builtin__ import str as builtin_str
 
 
 # Moved gevent imports into functions.
@@ -85,7 +92,7 @@ class GeventDaemonContext(daemon.DaemonContext):
                     raise ValueError('handler list is empty for signal %s', str(sig))
                 tocall = target[0]
                 args = target[1:]
-            elif isinstance(target, str):
+            elif isinstance(target, builtin_str):
                 assert not target.startswith('_')
                 tocall = getattr(self, target)
 

@@ -11,10 +11,8 @@ import sys
 from builtins import str
 
 if sys.version_info[0] > 2:
-    from webassets.filter.autoprefixer import Autoprefixer6Filter as AssetPrefix
     from builtins import str as builtin_str
 else:
-    from webassets.filter.cssprefixer import CSSPrefixer as AssetPrefix
     from __builtin__ import str as builtin_str
 
 
@@ -80,7 +78,3 @@ def get_version():
         return 'v' + pkg_resources.get_distribution('maildump').version
     except pkg_resources.DistributionNotFound:
         return 'dev'
-
-
-class CSSAssetPrefix(AssetPrefix):
-    max_debug_level = None
